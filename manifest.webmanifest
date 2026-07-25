@@ -1,0 +1,26 @@
+{
+  "name": "保險題庫 · 行動裝置保險業務員",
+  "short_name": "保險題庫",
+  "description": "行動裝置保險業務員資格測驗的題庫、練習與模擬考。1022 題，離線可用。",
+  "lang": "zh-Hant",
+  "dir": "ltr",
+  "start_url": "./",
+  "scope": "./",
+  "id": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#EFEFF4",
+  "theme_color": "#EFEFF4",
+  "categories": ["education", "productivity"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "開始練習", "short_name": "練習", "url": "./?tab=practice", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "模擬考", "short_name": "模擬考", "url": "./?tab=exam", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "錯題本", "short_name": "錯題本", "url": "./?tab=wrong", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}
