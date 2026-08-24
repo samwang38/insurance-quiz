@@ -1222,37 +1222,51 @@ $("#wrClear").addEventListener("click",()=>confirmSheet({
 /* ================================================================
    題庫瀏覽
    ================================================================ */
-const BPAGE=50; let bkFiltS="all", bkQuery="", bkShown=BPAGE;
+const BPP=100; let bkFiltS="all", bkQuery="", bkPage=1;
 function bankList(){
   let list=bkFiltS==="all"?BANK:BANK.filter(q=>q.subject===bkFiltS);
   const t=bkQuery.trim();
   if(t) list=list.filter(q=>(q.q+Object.values(q.opts).join("")+(q.exp||"")).includes(t));
   return list;
 }
-function renderBank(keep){
-  if(!keep) bkShown=BPAGE;
+function bkPagerHTML(pages,total){
+  if(pages<=1) return "";
+  let h='<div class="filtbar bk-pager" style="padding-top:2px">';
+  for(let p=1;p<=pages;p++){
+    const a=(p-1)*BPP+1, b=Math.min(p*BPP,total);
+    h+=`<button class="chip${p===bkPage?" on":""}" data-p="${p}">${p}<small>${a}–${b}</small></button>`;
+  }
+  return h+"</div>";
+}
+function renderBank(){
   $("#bkFilt").innerHTML=[`<button class="chip${bkFiltS==="all"?" on":""}" data-f="all">全部<small>${BANK.length}</small></button>`]
     .concat(SUBJECTS.map(s=>`<button class="chip${bkFiltS===s?" on":""}" data-f="${esc(s)}">${esc(s)}<small>${BANK.filter(q=>q.subject===s).length}</small></button>`)).join("");
-  const list=bankList(), page=list.slice(0,bkShown);
-  $("#bkLead").textContent=bkQuery.trim()?`找到 ${list.length} 題。`:`共 ${list.length} 題，正確答案已標示，直接往下背。`;
-  $("#bkList").innerHTML=page.map(q=>`
+  const list=bankList();
+  const pages=Math.max(1,Math.ceil(list.length/BPP));
+  if(bkPage>pages) bkPage=pages;
+  const page=list.slice((bkPage-1)*BPP,bkPage*BPP);
+  $("#bkLead").textContent=bkQuery.trim()
+    ?`找到 ${list.length} 題。`
+    :`共 ${list.length} 題，每頁 100 題，正確答案已標示。`;
+  $("#bkList").innerHTML=bkPagerHTML(pages,list.length)
+    +page.map(q=>`
     <div class="disc"><div class="body" style="padding-top:16px">
       <p class="qtext" style="font-size:17px;margin-bottom:14px"><b>${q.num}.</b> ${esc(q.q)}</p>
       <div class="opts">${optsStatic(q,null)}</div>
       ${q.exp&&q.exp.trim()?expHTML(q):""}
     </div></div>`).join("")
-    +(list.length>page.length
-      ?`<div class="btnrow" style="margin-top:6px"><button class="btn plain" id="bkMore">再顯示 ${Math.min(BPAGE,list.length-page.length)} 題（還有 ${list.length-page.length} 題）</button></div>`
-      :(list.length?"":`<div style="padding:34px 17px;text-align:center;color:var(--sec2,#888)">沒有符合的題目。</div>`));
+    +(list.length?bkPagerHTML(pages,list.length):`<div style="padding:34px 17px;text-align:center;color:var(--sec2,#888)">沒有符合的題目。</div>`);
 }
 $("#bkFilt").addEventListener("click",e=>{
   const b=e.target.closest(".chip"); if(!b) return;
-  bkFiltS=b.dataset.f; renderBank();
+  bkFiltS=b.dataset.f; bkPage=1; renderBank();
 });
 $("#bkList").addEventListener("click",e=>{
-  if(e.target.closest("#bkMore")){ bkShown+=BPAGE; renderBank(true); }
+  const b=e.target.closest(".bk-pager .chip"); if(!b) return;
+  bkPage=+b.dataset.p; renderBank();
+  $("#sc-bank").scrollTop=0;
 });
-$("#bkSearch").addEventListener("input",e=>{ bkQuery=e.target.value; renderBank(); });
+$("#bkSearch").addEventListener("input",e=>{ bkQuery=e.target.value; bkPage=1; renderBank(); });
 
 /* ================================================================
    統計
