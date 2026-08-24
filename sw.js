@@ -2,7 +2,7 @@
    策略：App Shell 快取優先 → 背景更新 → 有新版就通知頁面。
    使用者永遠是「秒開」，更新在背景默默完成，不會卡在轉圈畫面。 */
 
-const VERSION = 'v2.2.1';
+const VERSION = 'v2.3.0';
 const CACHE = `insurance-quiz-${VERSION}`;
 
 const ASSETS = [

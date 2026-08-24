@@ -742,11 +742,24 @@ button.row:active{background:var(--fill-2)}
     <p class="foot">資料由書本掃描辨識而成，若與原書不符請以原書為準。<br>清除瀏覽器資料或更換裝置後紀錄會消失。</p>
   </section>
 
+  <!-- ══════════════ 題庫 ══════════════ -->
+  <section class="screen" id="sc-bank" data-title="題庫">
+    <div class="lgtitle"><h1 class="t-large" style="margin:0">題庫</h1>
+      <p class="t-sub" id="bkLead">全部題目連同答案與解析，直接往下背。</p></div>
+    <div class="card pd" style="margin-bottom:14px">
+      <input id="bkSearch" type="search" placeholder="搜尋題目、選項或解析文字" autocomplete="off"
+        style="width:100%;border:0;outline:0;background:transparent;font:inherit;font-size:16px;color:var(--label)">
+    </div>
+    <div class="filtbar" id="bkFilt"></div>
+    <div id="bkList"></div>
+  </section>
+
   <!-- ══════════════ Tab Bar ══════════════ -->
   <nav id="tabbar" role="tablist">
     <div class="tabind" id="tabind"></div>
     <button class="tab on" data-tab="practice" role="tab"><svg><use href="#i-book"/></svg><span>練習</span></button>
     <button class="tab" data-tab="exam" role="tab"><svg><use href="#i-timer"/></svg><span>模擬考</span></button>
+    <button class="tab" data-tab="bank" role="tab"><svg><use href="#i-grid"/></svg><span>題庫</span></button>
     <button class="tab" data-tab="wrong" role="tab"><svg><use href="#i-bookmark"/></svg><span>錯題本</span><i class="badge hide" id="wrBadge">0</i></button>
     <button class="tab" data-tab="stats" role="tab"><svg><use href="#i-chart"/></svg><span>統計</span></button>
   </nav>
@@ -980,7 +993,7 @@ function confirmSheet({title,msg,ok,danger,onOk}){
 /* ================================================================
    分頁路由
    ================================================================ */
-const TABS=["practice","exam","wrong","stats"];
+const TABS=["practice","exam","bank","wrong","stats"];
 let curTab="practice";
 const topbar=document.createElement("div");
 topbar.className="topbar"; topbar.innerHTML="<b></b>";
@@ -997,6 +1010,7 @@ function showTab(name){
   const sc=$("#sc-"+name);
   topbar.querySelector("b").textContent=sc.dataset.title;
   topbar.classList.toggle("on",sc.scrollTop>46);
+  if(name==="bank") renderBank();
   if(name==="wrong") renderWrong();
   if(name==="stats") renderStats();
   if(name==="practice") renderPracticeProgress();
@@ -1204,6 +1218,41 @@ $("#wrClear").addEventListener("click",()=>confirmSheet({
   title:"清空錯題本？",msg:"所有收錄的錯題會被移除，這個動作無法復原。",ok:"清空",danger:true,
   onOk:()=>{ ST.wrong={}; saveST(); renderWrong(); toast("已清空"); }
 }));
+
+/* ================================================================
+   題庫瀏覽
+   ================================================================ */
+const BPAGE=50; let bkFiltS="all", bkQuery="", bkShown=BPAGE;
+function bankList(){
+  let list=bkFiltS==="all"?BANK:BANK.filter(q=>q.subject===bkFiltS);
+  const t=bkQuery.trim();
+  if(t) list=list.filter(q=>(q.q+Object.values(q.opts).join("")+(q.exp||"")).includes(t));
+  return list;
+}
+function renderBank(keep){
+  if(!keep) bkShown=BPAGE;
+  $("#bkFilt").innerHTML=[`<button class="chip${bkFiltS==="all"?" on":""}" data-f="all">全部<small>${BANK.length}</small></button>`]
+    .concat(SUBJECTS.map(s=>`<button class="chip${bkFiltS===s?" on":""}" data-f="${esc(s)}">${esc(s)}<small>${BANK.filter(q=>q.subject===s).length}</small></button>`)).join("");
+  const list=bankList(), page=list.slice(0,bkShown);
+  $("#bkLead").textContent=bkQuery.trim()?`找到 ${list.length} 題。`:`共 ${list.length} 題，正確答案已標示，直接往下背。`;
+  $("#bkList").innerHTML=page.map(q=>`
+    <div class="disc"><div class="body" style="padding-top:16px">
+      <p class="qtext" style="font-size:17px;margin-bottom:14px"><b>${q.num}.</b> ${esc(q.q)}</p>
+      <div class="opts">${optsStatic(q,null)}</div>
+      ${q.exp&&q.exp.trim()?expHTML(q):""}
+    </div></div>`).join("")
+    +(list.length>page.length
+      ?`<div class="btnrow" style="margin-top:6px"><button class="btn plain" id="bkMore">再顯示 ${Math.min(BPAGE,list.length-page.length)} 題（還有 ${list.length-page.length} 題）</button></div>`
+      :(list.length?"":`<div style="padding:34px 17px;text-align:center;color:var(--sec2,#888)">沒有符合的題目。</div>`));
+}
+$("#bkFilt").addEventListener("click",e=>{
+  const b=e.target.closest(".chip"); if(!b) return;
+  bkFiltS=b.dataset.f; renderBank();
+});
+$("#bkList").addEventListener("click",e=>{
+  if(e.target.closest("#bkMore")){ bkShown+=BPAGE; renderBank(true); }
+});
+$("#bkSearch").addEventListener("input",e=>{ bkQuery=e.target.value; renderBank(); });
 
 /* ================================================================
    統計
